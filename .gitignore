@@ -2,3 +2,6 @@
 *.swp
 *.xml
 *.xml.zip
+*.json
+*.ipynb
+.ipynb_checkpoints/
