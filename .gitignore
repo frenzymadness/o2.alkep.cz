@@ -5,3 +5,4 @@
 *.json
 *.ipynb
 .ipynb_checkpoints/
+.htpasswd

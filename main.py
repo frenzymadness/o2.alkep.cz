@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 from flask import Flask, request, render_template, redirect, url_for, flash
 from collections import defaultdict, OrderedDict
 from zipfile import ZipFile
+from os import path
 import xml.etree.ElementTree as ET
 import json
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
+
+root = path.dirname(path.abspath(__file__))
 
 
 def new_person(name="???", group="???"):
@@ -21,7 +24,7 @@ def new_person(name="???", group="???"):
 
 
 def load_persons():
-    with open("persons.json") as persons_file:
+    with open(path.join(root, "persons.json")) as persons_file:
         persons = json.load(persons_file)
         persons = OrderedDict(sorted(persons.items()))
 
