@@ -52,7 +52,7 @@ def save_persons():
               "danger")
         return redirect(url_for('index'))
     else:
-        with open("persons.json", mode="w") as persons_file:
+        with open(path.join(root, "persons.json"), mode="w") as persons_file:
             json.dump(persons, persons_file)
 
     flash("OK: Nastavení uloženo!", "success")
