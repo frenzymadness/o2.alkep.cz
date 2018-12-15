@@ -60,6 +60,7 @@
           <tr>
             <th>Skupina</th>
             <th>Paušál (s DPH)</th>
+            <th>Jednorázové platby (s DPH)</th>
             <th>Mimo paušál (s DPH)</th>
             <th>Služby 3. stran</th>
             <th>Suma</th>
@@ -69,12 +70,21 @@
           {% for name, group in groups.items() %}
           <tr>
             <td>{{ name }}</td>
-            <td>{{ group["regular"] }} Kč</td>
-            <td>{{ group["usage"] }} Kč</td>
-            <td>{{ group["payments"] }} Kč</td>
-            <th scope="row">{{ group["sum"] }} Kč</td>
+            <td>{{ group["regular"] | format_number }}</td>
+            <td>{{ group["one_time"] | format_number }}</td>
+            <td>{{ group["usage"] | format_number }}</td>
+            <td>{{ group["payments"] | format_number }}</td>
+            <th scope="row">{{ group["sum"] | format_number }}</td>
           </tr>
           {% endfor %}
+          <tr>
+            <th scope="row">Suma</th>
+            <th scope="row">{{ sums["group_regular"] | format_number }}</th>
+            <th scope="row">{{ sums["group_one_time"] | format_number }}</th>
+            <th scope="row">{{ sums["group_usage"] | format_number }}</th>
+            <th scope="row">{{ sums["group_payments"] | format_number }}</th>
+            <th scope="row"></th>
+          </tr>
         </tbody>
       </table>
 
@@ -85,6 +95,7 @@
             <th>Jméno</th>
             <th>Telefon</th>
             <th>Paušál (s DPH)</th>
+            <th>Jednorázové platby (s DPH)</th>
             <th>Mimo paušál (s DPH)</th>
             <th>Služby 3. stran</th>
             <th>Suma</th>
@@ -95,13 +106,23 @@
           <tr>
             <td>{{ person["name"] }}</td>
             <td>{{ phone }}</td>
-            <td>{{ person["regular"] }} Kč</td>
-            <td>{{ person["usage"] }} Kč</td>
-            <td>{{ person["payments"] }} Kč</td>
-            <th scope="row">{{ person["sum"] }} Kč</td>
+            <td>{{ person["regular"] | format_number }}</td>
+            <td>{{ person["one_time"] | format_number }}</td>
+            <td>{{ person["usage"] | format_number }} </td>
+            <td>{{ person["payments"] | format_number }}</td>
+            <th scope="row">{{ person["sum"] | format_number }} </td>
           </tr>
           {% endfor %}
         </tbody>
+        <tr>
+          <th scope="row">Suma</th>
+          <th scope="row"></th>
+          <th scope="row">{{ sums["persons_regular"] | format_number }}</th>
+          <th scope="row">{{ sums["persons_one_time"] | format_number }}</th>
+          <th scope="row">{{ sums["persons_usage"] | format_number }}</th>
+          <th scope="row">{{ sums["persons_payments"] | format_number }}</th>
+          <th scope="row"></th>
+        </tr>
       </table>
       {% endif %}
     </div>

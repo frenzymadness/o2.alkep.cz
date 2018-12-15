@@ -19,6 +19,7 @@ def new_person(name="???", group="???"):
         "group": group,
         "usage": 0.0,
         "regular": 0.0,
+        "one_time": 0.0,
         "payments": 0.0
     }
 
@@ -29,6 +30,13 @@ def load_persons():
         persons = OrderedDict(sorted(persons.items()))
 
     return persons
+
+
+@app.template_filter("format_number")
+def format_number(value):
+    rounded = round(value, 2)
+    string = str(rounded)
+    return string.replace(".", ",")
 
 
 @app.route("/", methods=["GET"])
@@ -97,10 +105,16 @@ def process():
             person["payments"] += float(pay.attrib["paymentTotalPrice"])
         except IndexError:
             pass
+        try:
+            one_time = customer.findall(".//oneTimeCharges")[0]
+            person["one_time"] += float(one_time.attrib["otcTotalPriceWithVat"])
+        except IndexError:
+            pass
 
         person["sum"] = sum([person["regular"],
                              person["usage"],
-                             person["payments"]])
+                             person["payments"],
+                             person["one_time"]])
 
     groups = defaultdict(lambda: defaultdict(float))
     for phone, person in persons.items():
@@ -108,14 +122,29 @@ def process():
         groups[group]["usage"] += person["usage"]
         groups[group]["regular"] += person["regular"]
         groups[group]["payments"] += person["payments"]
+        groups[group]["one_time"] += person["one_time"]
 
         groups[group]["sum"] += sum([person["regular"],
                                      person["usage"],
-                                     person["payments"]])
+                                     person["payments"],
+                                     person["one_time"]])
 
     groups = OrderedDict(sorted(groups.items()))
 
-    return render_template("index.html", persons=persons, groups=groups)
+    # Summaries (last line of each table)
+    sums = {}
+    sums["persons_regular"] = sum([p["regular"] for _, p in persons.items()])
+    sums["persons_usage"] = sum([p["usage"] for _, p in persons.items()])
+    sums["persons_payments"] = sum([p["payments"] for _, p in persons.items()])
+    sums["persons_one_time"] = sum([p["one_time"] for _, p in persons.items()])
+
+    sums["group_regular"] = sum([g["regular"] for _, g  in groups.items()])
+    sums["group_usage"] = sum([g["usage"] for _, g  in groups.items()])
+    sums["group_payments"] = sum([g["payments"] for _, g  in groups.items()])
+    sums["group_one_time"] = sum([g["one_time"] for _, g  in groups.items()])
+
+    return render_template("index.html", persons=persons, groups=groups,
+                           sums=sums)
 
 
 if __name__ == '__main__':
