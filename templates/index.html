@@ -83,7 +83,7 @@
             <th scope="row">{{ sums["group_one_time"] | format_number }}</th>
             <th scope="row">{{ sums["group_usage"] | format_number }}</th>
             <th scope="row">{{ sums["group_payments"] | format_number }}</th>
-            <th scope="row"></th>
+            <th scope="row">{{ sums["all_groups"] | format_number }}</th>
           </tr>
         </tbody>
       </table>
@@ -121,7 +121,7 @@
           <th scope="row">{{ sums["persons_one_time"] | format_number }}</th>
           <th scope="row">{{ sums["persons_usage"] | format_number }}</th>
           <th scope="row">{{ sums["persons_payments"] | format_number }}</th>
-          <th scope="row"></th>
+          <th scope="row">{{ sums["all_persons"] | format_number }}</th>
         </tr>
       </table>
       {% endif %}

@@ -137,11 +137,15 @@ def process():
     sums["persons_usage"] = sum([p["usage"] for _, p in persons.items()])
     sums["persons_payments"] = sum([p["payments"] for _, p in persons.items()])
     sums["persons_one_time"] = sum([p["one_time"] for _, p in persons.items()])
+    sums["all_persons"] = sum([v for v in sums.values()])
 
     sums["group_regular"] = sum([g["regular"] for _, g  in groups.items()])
     sums["group_usage"] = sum([g["usage"] for _, g  in groups.items()])
     sums["group_payments"] = sum([g["payments"] for _, g  in groups.items()])
     sums["group_one_time"] = sum([g["one_time"] for _, g  in groups.items()])
+    sums["all_groups"] = sum([v
+                              for k, v in sums.items()
+                              if k.startswith("group_")])
 
     return render_template("index.html", persons=persons, groups=groups,
                            sums=sums)
