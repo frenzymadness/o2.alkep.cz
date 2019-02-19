@@ -20,7 +20,9 @@ def new_person(name="???", group="???"):
         "usage": 0.0,
         "regular": 0.0,
         "one_time": 0.0,
-        "payments": 0.0
+        "payments": 0.0,
+        "services": 0.0,
+        "sum": 0.0
     }
 
 
@@ -110,11 +112,17 @@ def process():
             person["one_time"] += float(one_time.attrib["otcTotalPriceWithVat"])
         except IndexError:
             pass
+        try:
+            services = customer.findall(".//additionalServices")[0]
+            person["services"] += float(services.attrib["asTotalPriceWithVat"])
+        except IndexError:
+            pass
 
         person["sum"] = sum([person["regular"],
                              person["usage"],
                              person["payments"],
-                             person["one_time"]])
+                             person["one_time"],
+                             person["services"]])
 
     groups = defaultdict(lambda: defaultdict(float))
     for phone, person in persons.items():
@@ -123,11 +131,13 @@ def process():
         groups[group]["regular"] += person["regular"]
         groups[group]["payments"] += person["payments"]
         groups[group]["one_time"] += person["one_time"]
+        groups[group]["services"] += person["services"]
 
         groups[group]["sum"] += sum([person["regular"],
                                      person["usage"],
                                      person["payments"],
-                                     person["one_time"]])
+                                     person["one_time"],
+                                     person["services"]])
 
     groups = OrderedDict(sorted(groups.items()))
 
@@ -137,12 +147,14 @@ def process():
     sums["persons_usage"] = sum([p["usage"] for _, p in persons.items()])
     sums["persons_payments"] = sum([p["payments"] for _, p in persons.items()])
     sums["persons_one_time"] = sum([p["one_time"] for _, p in persons.items()])
+    sums["persons_services"] = sum([p["services"] for _, p in persons.items()])
     sums["all_persons"] = sum([v for v in sums.values()])
 
     sums["group_regular"] = sum([g["regular"] for _, g  in groups.items()])
     sums["group_usage"] = sum([g["usage"] for _, g  in groups.items()])
     sums["group_payments"] = sum([g["payments"] for _, g  in groups.items()])
     sums["group_one_time"] = sum([g["one_time"] for _, g  in groups.items()])
+    sums["group_services"] = sum([g["services"] for _, g  in groups.items()])
     sums["all_groups"] = sum([v
                               for k, v in sums.items()
                               if k.startswith("group_")])
