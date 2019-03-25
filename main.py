@@ -90,6 +90,8 @@ def process():
 
     types = [type for type, _, _ in to_process]
 
+    parent_service_nums_skip = []
+
     # For loop to get data about every customer/phone number
     for customer in tree.findall(".//subscriber[@accountType='CUST']"):
         phone = customer.attrib["phoneNumber"]
@@ -103,10 +105,34 @@ def process():
             try:
                 rc = customer.findall(".//" + tag)[0]
                 person[type] += float(rc.attrib[attrib])
+                person["sum"] += float(rc.attrib[attrib])
             except IndexError:
                 pass
 
-            person["sum"] += person[type]
+        # Process aditional tariff space which usualy means some change
+        # in tarrif in the last month
+        cust_acc_num = customer.attrib["customerAccountNumber"]
+        parent_service_num = customer.attrib["parentServiceNumber"]
+        if cust_acc_num != parent_service_num and \
+                parent_service_num not in parent_service_nums_skip:
+
+            parent_service_nums_skip.append(parent_service_num)
+            tariffs = tree.findall(".//subscriber[@accountType='TS']")
+            for tariff in tariffs:
+                if tariff.attrib["phoneNumber"] == parent_service_num:
+                    break
+            else:
+                flash("CHYBA: Nenalezena změna tarifu pro číslo " + phone,
+                      "danger")
+                return redirect(url_for("index"))
+
+            for type, tag, attrib in to_process:
+                try:
+                    rc = tariff.findall(".//" + tag)[0]
+                    person[type] += float(rc.attrib[attrib])
+                    person["sum"] += float(rc.attrib[attrib])
+                except IndexError:
+                    pass
 
     # Groups of customers
     groups = defaultdict(lambda: defaultdict(float))
