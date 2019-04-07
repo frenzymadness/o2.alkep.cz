@@ -8,9 +8,18 @@ import xml.etree.ElementTree as ET
 import json
 
 app = Flask(__name__)
-app.secret_key = 'super secret key'
+app.secret_key = "super secret key"
 
 root = path.dirname(path.abspath(__file__))
+
+# The list of fields to process for each customer
+to_process = [
+    ("regular", "regularCharges", "rcTotalPriceWithVat"),
+    ("usage", "usageCharges", "ucTotalPriceWithVat"),
+    ("payments", "payments", "paymentTotalPrice"),
+    ("one_time", "oneTimeCharges", "otcTotalPriceWithVat"),
+    ("services", "additionalServices", "asTotalPriceWithVat"),
+]
 
 
 def new_person(name="???", group="???", types=None):
@@ -46,29 +55,35 @@ def index():
 def save_persons():
     data = request.form["persons"]
     persons = {}
+    types = [type for type, _, _ in to_process]
+
     try:
         for line in data.split("\n"):
             if "," not in line:
                 continue
             name, group, phone = line.strip().split(",")
-            persons[phone.strip()] = new_person(name.strip(), group.strip())
-    except Exception:
-        flash("CHYBA: Neplatný vstup - někde něco chybělo nebo bylo navíc",
-              "danger")
-        return redirect(url_for('index'))
+            persons[phone.strip()] = new_person(
+                name.strip(), group.strip(), types
+            )
+    except Exception as e:
+        flash(
+            "CHYBA: Neplatný vstup - někde něco chybělo nebo bylo navíc",
+            "danger",
+        )
+        return redirect(url_for("index"))
     else:
         with open(path.join(root, "persons.json"), mode="w") as persons_file:
             json.dump(persons, persons_file)
 
     flash("OK: Nastavení uloženo!", "success")
-    return redirect(url_for('index'))
+    return redirect(url_for("index"))
 
 
 @app.route("/process", methods=["POST"])
 def process():
     persons = load_persons()
     try:
-        file = request.files['input-file']
+        file = request.files["input-file"]
     except Exception:
         flash("CHYBA: Nebyl vložen soubor ke zpracování", "danger")
         return redirect(url_for("index"))
@@ -79,14 +94,6 @@ def process():
         tree = ET.parse(xml)
     else:
         tree = ET.parse(file)
-
-    to_process = [
-        ("regular", "regularCharges", "rcTotalPriceWithVat"),
-        ("usage", "usageCharges", "ucTotalPriceWithVat"),
-        ("payments", "payments", "paymentTotalPrice"),
-        ("one_time", "oneTimeCharges", "otcTotalPriceWithVat"),
-        ("services", "additionalServices", "asTotalPriceWithVat"),
-    ]
 
     types = [type for type, _, _ in to_process]
 
@@ -113,8 +120,10 @@ def process():
         # in tarrif in the last month
         cust_acc_num = customer.attrib["customerAccountNumber"]
         parent_service_num = customer.attrib["parentServiceNumber"]
-        if cust_acc_num != parent_service_num and \
-                parent_service_num not in parent_service_nums_skip:
+        if (
+            cust_acc_num != parent_service_num
+            and parent_service_num not in parent_service_nums_skip
+        ):
 
             parent_service_nums_skip.append(parent_service_num)
             tariffs = tree.findall(".//subscriber[@accountType='TS']")
@@ -122,8 +131,10 @@ def process():
                 if tariff.attrib["phoneNumber"] == parent_service_num:
                     break
             else:
-                flash("CHYBA: Nenalezena změna tarifu pro číslo " + phone,
-                      "danger")
+                flash(
+                    "CHYBA: Nenalezena změna tarifu pro číslo " + phone,
+                    "danger",
+                )
                 return redirect(url_for("index"))
 
             for type, tag, attrib in to_process:
@@ -152,13 +163,14 @@ def process():
 
     for type, _, _ in to_process:
         sums["group_" + type] = sum([g[type] for _, g in groups.items()])
-    sums["all_groups"] = sum([v
-                              for k, v in sums.items()
-                              if k.startswith("group_")])
+    sums["all_groups"] = sum(
+        [v for k, v in sums.items() if k.startswith("group_")]
+    )
 
-    return render_template("index.html", persons=persons, groups=groups,
-                           sums=sums)
+    return render_template(
+        "index.html", persons=persons, groups=groups, sums=sums
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
